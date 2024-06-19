@@ -1,0 +1,9 @@
+[package]
+name = "rustls-examples"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rustls = { version = "0.23", default-features = false, features = ["std", "ring"] }
+rustls-pemfile = "2"
+webpki-roots = "0.26"
