@@ -56,18 +56,27 @@ fn server() {
         // Handshake
         conn.complete_io(&mut stream).unwrap();
 
-        // Write
-        conn.writer()
-            .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nResponse\r\n")
-            .unwrap();
-
         // Read
-        conn.read_tls(&mut stream).unwrap();
-        conn.process_new_packets().unwrap();
-
+        if conn.wants_read() {
+            conn.read_tls(&mut stream).unwrap();
+            conn.process_new_packets().unwrap();
+        }
         let mut buf = String::new();
         let _ = conn.reader().read_to_string(&mut buf);
         println!("Received message from client: {}", buf);
+
+        // Write
+        conn.writer()
+            .write_all(
+                concat!(
+                    "HTTP/1.1 200 OK\r\n",
+                    "Content-Type: text/plain\r\n",
+                    "\r\n",
+                    "Response\r\n"
+                )
+                .as_bytes(),
+            )
+            .unwrap();
 
         // Close
         conn.send_close_notify();
@@ -118,6 +127,7 @@ fn client() {
         ciphersuite.suite()
     )
     .unwrap();
+
     let mut plaintext = Vec::new();
     tls.read_to_end(&mut plaintext).unwrap();
     std::io::stdout().write_all(&plaintext).unwrap();
